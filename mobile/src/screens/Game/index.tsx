@@ -11,6 +11,7 @@ import { FlatList, Image, Text, TouchableOpacity, View } from "react-native";
 import { THEME } from "../../theme";
 import { Heading } from "../../components/Heading";
 import { DuoCard, DuoCardProps } from "../../components/DuoCard";
+import { DuoMatch } from "../../components/DuoMatch";
 
 export function Game() {
   const navigation = useNavigation();
@@ -18,13 +19,20 @@ export function Game() {
   const game = route.params as GameParams;
 
   const [duos, setDuos] = useState<DuoCardProps[]>([]);
+  const [discordDuoSelected, setDiscordDuoSelected] = useState("");
 
   function handleGoBack() {
     navigation.goBack();
   }
 
+  async function getDiscordUser(adsId: string) {
+    fetch(`https://8ca7-45-239-175-43.sa.ngrok.io/ads/${adsId}/discord`)
+      .then((response) => response.json())
+      .then((data) => setDiscordDuoSelected(data.discord));
+  }
+
   useEffect(() => {
-    fetch(`https://41d3-45-239-175-43.sa.ngrok.io/games/${game.id}/ads`)
+    fetch(`https://8ca7-45-239-175-43.sa.ngrok.io/games/${game.id}/ads`)
       .then((response) => response.json())
       .then((data) => setDuos(data));
   }, []);
@@ -62,13 +70,19 @@ export function Game() {
           showsHorizontalScrollIndicator={false}
           style={styles.containerList}
           renderItem={({ item }) => (
-            <DuoCard data={item} onConnect={() => {}} />
+            <DuoCard data={item} onConnect={() => getDiscordUser(item.id)} />
           )}
           ListEmptyComponent={() => (
             <Text style={styles.emptyListText}>
               Não há anúncios publicados ainda.
             </Text>
           )}
+        />
+
+        <DuoMatch
+          visible={!!discordDuoSelected}
+          discord={discordDuoSelected}
+          onClose={() => setDiscordDuoSelected("")}
         />
       </SafeAreaView>
     </Background>
